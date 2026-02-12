@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Gizi Ibu (Metode LILA) - Pro Data</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --primary-dark: #EE5253;
+            --success: #1dd1a1;      /* Hijau - Normal */
+            --warning: #feca57;      /* Kuning - Risiko Ringan */
+            --danger: #ff6b6b;       /* Merah - KEK */
+            --severe: #c0392b;       /* Merah Tua - KEK Berat */
+            --obese: #9b59b6;        /* Ungu - Obesitas */
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-main: #2d3436;
+            --text-muted: #636e72;
+            --border-radius: 16px;
+            --shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px; /* Diperlebar sedikit untuk muat data banyak */
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Header Style */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .icon-header {
+            font-size: 40px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.2);
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+        }
+
+        /* Form Area */
+        .content {
+            padding: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+        }
+
+        .btn-check {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-check:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Result Area */
+        #result-area {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-card {
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        /* CSS Variables untuk status warna dinamis di JS */
+        .status-normal { background-color: #e6fcf5; border-color: #c3fae8; color: #087f5b; }
+        .status-kek { background-color: #fff4e6; border-color: #ffe8cc; color: #d9480f; } /* Orange */
+        .status-severe { background-color: #fff5f5; border-color: #ffe3e3; color: #c92a2a; } /* Merah */
+        .status-obese { background-color: #f3f0ff; border-color: #e5dbff; color: #5f3dc4; } /* Ungu */
+
+        .result-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .result-desc {
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* Kotak Saran Detail */
+        .advice-grid {
+            display: grid;
+            gap: 15px;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .advice-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .advice-item h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .advice-item h4 i {
+            margin-right: 8px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .advice-item ul {
+            padding-left: 25px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        
+        .advice-item li {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        /* Info Text */
+        .info-text {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 11px;
+            color: #b2bec3;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            header h1 { font-size: 18px; }
+            .content { padding: 20px; }
+            .advice-item { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="icon-header">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <h1>Kalkulator Gizi Ibu (LILA)</h1>
+            <p>Analisis Nutrisi Lengkap & Rekomendasi Medis</p>
+        </header>
+
+        <div class="content">
+            <div class="input-group">
+                <label for="lilaInput">Masukkan Lingkar Lengan Atas (cm)</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-ruler-horizontal"></i>
+                    <input type="number" id="lilaInput" placeholder="Contoh: 24.5" step="0.1" min="10" max="60" onkeypress="handleEnter(event)">
+                </div>
+            </div>
+
+            <button class="btn-check" onclick="hitungGizi()">
+                <i class="fas fa-search-plus"></i> Analisis Detail
+            </button>
+
+            <div id="result-area"></div>
+
+            <div class="info-text">
+                <p>Sumber Data: Kemenkes RI (Pedoman Gizi Ibu Hamil & WUS).<br>Batas ambang risiko KEK nasional: < 23.5 cm.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATABASE SARAN LENGKAP
+        const adviceDatabase = {
+            severe: {
+                title: "KEK Berat (Sangat Kurang)",
+                class: "status-severe",
+                icon: "fa-ambulance",
+                desc: "Kondisi ini memerlukan perhatian medis segera. Cadangan energi sangat minim.",
+                nutrition: [
+                    "<strong>Wajib Tinggi Kalori & Protein:</strong> Makan porsi ganda atau porsi kecil tapi sangat sering (6-8x sehari).",
+                    "<strong>Prioritas Protein Hewani:</strong> Telur (2 butir/hari), daging merah, hati ayam, ikan kembung.",
+                    "<strong>Tambahan Lemak Sehat:</strong> Tambahkan minyak kelapa/zaitun pada makanan, konsumsi alpukat.",
+                    "<strong>Suplementasi Khusus:</strong> Susu ibu hamil tinggi kalori (konsul dokter)."
+                ],
+                risk: [
+                    "Risiko tinggi BBLR (Bayi Berat Lahir Rendah).",
+                    "Gangguan pertumbuhan janin (IUGR).",
+                    "Risiko anemia berat pada ibu."
+                ],
+                action: [
+                    "<strong>Segera ke Dokter Kandungan (Sp.OG):</strong> Cek kondisi janin via USG.",
+                    "<strong>Minta Rujukan PMT:</strong> Hubungi Puskesmas untuk mendapat biskuit PMT Ibu Hamil (Program Pemerintah).",
+                    "Istirahat total, kurangi aktivitas fisik berat."
+                ],
+                color: "#c92a2a"
+            },
+            moderate: {
+                title: "Berisiko KEK (Kurang Energi Kronis)",
+                class: "status-kek",
+                icon: "fa-exclamation-triangle",
+                desc: "Di bawah ambang batas aman (23.5 cm). Tubuh kekurangan cadangan lemak dan protein.",
+                nutrition: [
+                    "<strong>Pola Makan 'Isi Piringku':</strong> Tambahkan 1 porsi ekstra lauk pauk setiap makan.",
+                    "<strong>Camilan Padat Gizi:</strong> Roti gandum, kacang hijau, ubi rebus, atau pisang di sela jam makan.",
+                    "<strong>Zat Besi:</strong> Bayam, hati sapi, kerang (matang sempurna) untuk cegah anemia.",
+                    "<strong>Minum Air:</strong> Minimal 10-12 gelas sehari."
+                ],
+                risk: [
+                    "Ibu mudah lelah dan lemah.",
+                    "Risiko persalinan lama/sulit.",
+                    "Kekebalan tubuh menurun (mudah sakit)."
+                ],
+                action: [
+                    "Kunjungan rutin ke Posyandu/Bidan.",
+                    "Minum Tablet Tambah Darah (TTD) rutin setiap hari (minum dengan air jeruk, jangan teh/kopi).",
+                    "Pantau kenaikan berat badan mingguan."
+                ],
+                color: "#d9480f"
+            },
+            normal: {
+                title: "Status Gizi Normal / Ideal",
+                class: "status-normal",
+                icon: "fa-check-circle",
+                desc: "Ukuran LILA ideal. Cadangan energi cukup untuk kehamilan dan menyusui.",
+                nutrition: [
+                    "<strong>Pertahankan Pola Makan:</strong> Gizi seimbang karbohidrat, protein, sayur, dan buah.",
+                    "<strong>Variasi Makanan:</strong> Ganti-ganti jenis lauk agar tidak bosan dan nutrisi lengkap.",
+                    "<strong>Sumber Kalsium:</strong> Susu, yogurt, atau ikan teri untuk tulang janin.",
+                    "<strong>Serat:</strong> Buah pepaya/naga untuk cegah sembelit."
+                ],
+                risk: [
+                    "Risiko komplikasi gizi rendah.",
+                    "Tetap waspada terhadap anemia kehamilan.",
+                    "Pantau agar LILA tidak turun."
+                ],
+                action: [
+                    "Lanjutkan pemeriksaan kehamilan (ANC) rutin.",
+                    "Ikuti kelas senam hamil jika memungkinkan.",
+                    "Persiapkan tabungan persalinan."
+                ],
+                color: "#087f5b"
+            },
+            obese: {
+                title: "Kelebihan Gizi / Risiko Obesitas",
+                class: "status-obese",
+                icon: "fa-search", // Ikon diganti agar tidak membingungkan
+                desc: "LILA cukup besar (> 30 cm). Perlu waspada terhadap kadar gula dan tensi.",
+                nutrition: [
+                    "<strong>Kurangi Gula & Tepung:</strong> Batasi manis-manis, kue, dan gorengan.",
+                    "<strong>Ganti Karbohidrat:</strong> Nasi merah atau jagung lebih disarankan daripada nasi putih berlebih.",
+                    "<strong>Perbanyak Sayuran Rebus:</strong> Minimal setengah piring makan adalah sayur.",
+                    "<strong>Protein Tanpa Lemak:</strong> Dada ayam tanpa kulit, ikan, tahu/tempe rebus/bakar."
+                ],
+                risk: [
+                    "Risiko Diabetes Gestasional (Gula darah tinggi saat hamil).",
+                    "Risiko Preeklamsia (Tensi tinggi).",
+                    "Bayi besar (Makrosomia) yang menyulitkan persalinan normal."
+                ],
+                action: [
+                    "Cek Gula Darah dan Tensi secara rutin.",
+                    "Tetap aktif bergerak (jalan kaki pagi 30 menit).",
+                    "Konsultasi ahli gizi untuk manajemen berat badan aman saat hamil."
+                ],
+                color: "#5f3dc4"
+            }
+        };
+
+        function handleEnter(event) {
+            if (event.key === "Enter") hitungGizi();
+        }
+
+        function hitungGizi() {
+            const lilaValue = parseFloat(document.getElementById('lilaInput').value);
+            const resultArea = document.getElementById('result-area');
+
+            // Validasi Input
+            if (isNaN(lilaValue) || lilaValue < 10 || lilaValue > 60) {
+                alert("Mohon masukkan angka LILA yang valid (antara 10 - 60 cm).");
+                return;
+            }
+
+            // Logika Penentuan Kategori
+            let statusKey = "";
+            if (lilaValue < 18.5) statusKey = "severe";
+            else if (lilaValue < 23.5) statusKey = "moderate"; // Standar Kemenkes 23.5
+            else if (lilaValue <= 30.0) statusKey = "normal";
+            else statusKey = "obese";
+
+            const data = adviceDatabase[statusKey];
+
+            // Render HTML
+            const htmlContent = `
+                <div class="result-card ${data.class}">
+                    <div class="result-icon" style="color:${data.color}">
+                        <i class="fas ${data.icon}"></i>
+                    </div>
+                    <div class="result-title" style="color:${data.color}">${data.title}</div>
+                    <div class="result-desc">
+                        LILA Anda: <strong>${lilaValue} cm</strong>.<br>${data.desc}
+                    </div>
+                    
+                    <div class="advice-grid">
+                        <div class="advice-item" style="border-left-color: ${data.color}">
+                            <h4 style="color:${data.color}"><i class="fas fa-utensils"></i> Rekomendasi Nutrisi</h4>
+                            <ul>${data.nutrition.map(item => `<li>${item}</li>`).join('')}</ul>
+                        </div>
+                        
+                        <div class="advice-item" style="border-left-color: ${data.color}">
+                            <h4 style="color:${data.color}"><i class="fas fa-heart-broken"></i> Risiko Kesehatan</h4>
+                            <ul>${data.risk.map(item => `<li>${item}</li>`).join('')}</ul>
+                        </div>
+
+                        <div class="advice-item" style="border-left-color: ${data.color}">
+                            <h4 style="color:${data.color}"><i class="fas fa-user-md"></i> Tindakan Medis</h4>
+                            <ul>${data.action.map(item => `<li>${item}</li>`).join('')}</ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            resultArea.innerHTML = htmlContent;
+            resultArea.style.display = 'block';
+            
+            // Auto scroll ke hasil
+            setTimeout(() => {
+                resultArea.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
